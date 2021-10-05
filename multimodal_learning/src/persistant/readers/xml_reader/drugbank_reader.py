@@ -59,6 +59,13 @@ class DrugDAL():
             except:
                 drug_info['type_'] = None
 
+            try:
+                drug_desc = drug.findtext("{ns}description".format(ns=ns))
+            except:
+                drug_desc = None
+            
+            drug_info['description'] = drug_desc
+
             drug_info.setdefault('groups', set())
             for _, group in enumerate(drug.findall("{ns}groups".format(ns=ns))[0].getchildren()):
                 drug_info['groups'].add(group.text)
@@ -209,6 +216,7 @@ class Drug():
     id_: Optional[str] = None
     name: Optional[str] = None
     type_: Optional[str] = None
+    description: Optional[str] = None
     approved: Optional[str] = None
     text: Optional[str] = None
     smiles: Optional[str] = None
@@ -329,19 +337,27 @@ class DrugBank():
 
 class DrugReader():
 
-    def __init__(self, path: str):
+    def __init__(self):
+        pass
 
-        self.path = path
-
-
-    def get_drug_data(self, path: str, train_version: str, test_version: str) -> Tuple[DrugBank, DrugBank]:
+    def get_drug_data(self, path: str, train_version: str=None, test_version: str=None) -> Tuple[DrugBank, DrugBank]:
         """
         Returning processed drug bank data for train and test versions.
         """
-        train_reader = DrugDAL(f'{path}/{train_version}')
-        train_data = train_reader.read_data_from_file()
+        
+        if train_version is not None:
+            train_reader = DrugDAL(f'{path}/{train_version}')
+            train_data = train_reader.read_data_from_file()
 
-        test_reader = DrugDAL(f'{path}/{test_version}')
-        test_data = test_reader.read_data_from_file()
+        if test_version is not None:
+            test_reader = DrugDAL(f'{path}/{test_version}')
+            test_data = test_reader.read_data_from_file()
+        
+        if train_version and test_version:
+            return train_data, test_data
+        
+        elif train_version and not test_version:
+            return train_data
 
-        return train_data, test_data
+        elif not train_version and test_version:
+            return test_data

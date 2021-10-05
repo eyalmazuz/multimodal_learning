@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 from src.datasets.drug_interactions.Datasets import TrainDataset, TestDataset, NewOldTestDataset, NewNewTestDataset, TTATestDataset, TTANNTestDataset
-from src.persistant.xml_reader.dal import DrugBank
+from src.persistant.readers.xml_reader.drugbank_reader import DrugBank
 
 class DatasetTypes(Enum):
     AFMP = 1
