@@ -18,9 +18,4 @@ def read_h5(path: str='./data/DTI/h5/modalities_dict_5.1.8.h5'):
     store = pd.HDFStore(path)
     print(store.info())
     print(store.keys())
-    X_unlabled = store['/df']
-    X_unlabled = X_unlabled.loc[~X_unlabled.index.duplicated(keep='first')]  # four drugs appear twice....
-    modalities_df = store['/modalities']
-    store.close()
-    print('done reading from disk')
-    return X_unlabled.loc[:,modalities_df.loc[modalities_df.modality.isin(['Target','Associated_condition','Smiles']),'feature']],modalities_df #reading only targets
+    return store

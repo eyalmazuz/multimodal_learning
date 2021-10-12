@@ -1,8 +1,11 @@
+import json
 import os
+from typing import List
 
 import numpy as np
 import pandas as pd
 from pandas import HDFStore
+from tqdm import tqdm
 
 def create_prediction_splits(df,target_att_name,set_name="set",num_test_sets=10,random_state=None,include_pos=False):
     assert set not in df.columns,'The column for target already exists in the dataframe'
@@ -72,3 +75,50 @@ def preprocess_data(data_path: str, modalities_path: str, save_path: str, versio
 
 
     smiles.loc[~smiles.index.isin(ans.index)].drop_duplicates(subset='Smiles').to_csv(os.path.join(save_path, 'labels_infer_drugbank'+'.csv'),index=True)
+
+
+def create_data_features(feature_df: pd.DataFrame,
+                         feature_name: str,
+                         data_path: str,
+                         files: List[str],
+                         similarity_dict_path: str):
+    print(f'creating feature: {feature_name}')
+    for file_ in files:
+        feature_save_path = f'{data_path}/{file_}_{feature_name}.csv'
+        if not os.path.exists(feature_save_path):
+            path = os.path.join(data_path, f'{file_}.csv')
+            df = pd.read_csv(path, index_col=0)
+            # features_df = pd.read_csv(feature_path)
+            with open(similarity_dict_path, 'r') as f:
+                similarity_dict = json.load(f)
+            
+            # TODO remove un approved drugs from feature_df
+            extra_df = pd.DataFrame()
+            for drug_id in tqdm(df.index):
+                found_feature = False
+                if drug_id in feature_df.index:
+                    drug_feature = feature_df[feature_df.index == drug_id]
+                    extra_df = extra_df.append(drug_feature)
+                    found_feature = True
+                else:
+                    if drug_id in similarity_dict and similarity_dict[drug_id]:
+                        similar_drugs = similarity_dict[drug_id]
+                        for (similar_drug, _) in similar_drugs:
+                            if similar_drug in feature_df.index:
+                                drug_feature = feature_df[feature_df.index == similar_drug]
+                                drug_feature.name = drug_id
+                                extra_df = extra_df.append(drug_feature)
+                                found_feature = True
+                                # print(f'found similar drug to {drug_id}: {similar_drug}')
+                                break
+
+                if not found_feature:
+                    # print(f'No feature for {drug_id} and no similars in features')
+                    mean_feature = feature_df.mean(axis=0)
+                    mean_feature.name = drug_id
+                    extra_df = extra_df.append(mean_feature)
+            
+            extra_df.to_csv(feature_save_path, index=False)
+
+        
+

@@ -120,5 +120,15 @@ target_att_rcc = ['Associated condition: Advanced Renal Cell Carcinoma',
 nih_rcc_drug_names = ['Afinitor (Everolimus)', 'Afinitor Disperz (Everolimus)', 'Aldesleukin', 'Avastin (Bevacizumab)', 'Avelumab', 'Axitinib', 'Bavencio (Avelumab)', 'Bevacizumab', 'Cabometyx (Cabozantinib-S-Malate)', 'Cabozantinib-S-Malate', 'Everolimus', 'Fotivda (Tivozanib Hydrochloride)', 'IL-2 (Aldesleukin)', 'Inlyta (Axitinib)', 'Interleukin-2 (Aldesleukin)', 'Ipilimumab', 'Jelmyto (Mitomycin)', 'Keytruda (Pembrolizumab)', 'Lenvatinib Mesylate', 'Lenvima (Lenvatinib Mesylate)', 'Mitomycin', 'Mvasi (Bevacizumab)', 'Nexavar (Sorafenib Tosylate)', 'Nivolumab', 'Opdivo (Nivolumab)', 'Pazopanib Hydrochloride', 'Pembrolizumab', 'Proleukin (Aldesleukin)', 'Sorafenib Tosylate', 'Sunitinib Malate', 'Sutent (Sunitinib Malate)', 'Temsirolimus', 'Tivozanib Hydrochloride', 'Torisel (Temsirolimus)', 'Votrient (Pazopanib Hydrochloride)', 'Yervoy (Ipilimumab)', 'Zirabev (Bevacizumab)']
 
 def contains_cancer_word(x):
-    return 'cancer' in x.lower() or 'carcinoma' in x.lower() or 'neoplasm' in x.lower() or 'tumour' in x.lower() or 'malignant' in x.lower() or 'thymoma' in x.lower() or 'sarcoma' in x.lower() or 'leukemia' in x.lower() or 'lymphoma' in x.lower() or 'hodgkin' in x.lower()
+    return ('cancer' in x.lower() or 
+            'carcinoma' in x.lower() or
+            'neoplasm' in x.lower() or
+            'tumour' in x.lower() or
+            'malignant' in x.lower() or
+            'thymoma' in x.lower() or
+            'sarcoma' in x.lower() or 
+            'leukemia' in x.lower() or
+            'lymphoma' in x.lower() or
+            'hodgkin' in x.lower() or
+            'neoplastic' in x.lower())
     

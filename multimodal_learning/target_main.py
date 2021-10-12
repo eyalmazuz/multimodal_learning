@@ -5,18 +5,33 @@ import chemprop
 import pandas as pd
 
 from src.persistant.readers.db_reader.db_reader import get_h5_data
-from src.preprocess.chemprop_preprocessor import preprocess_data
+from src.preprocess.chemprop_preprocessor import preprocess_data, create_data_features
 from src.utils.utils import read_h5
 from src.utils.description_utils import enrich_data
-from src.persistant.readers.xml_reader.drugbank_reader import DrugReader
+from src.features.drug_target.TargetPCAFeature import TargetPCAFeature
 
 def main():
     version = '5.1.8'
-    modalities_path = './data/DTI/h5/'
+    modalities_path = './data/DTI/h5'
+    features_path = './data/DTI/features'
 
     path = './data/DTI/cancer_clinical_trials'
     checkpoint_path = f'{path}/cps'
     data_save_path = f'{path}/processed'
+    
+    use_additional_features = True
+    features = [TargetPCAFeature]
+    print(str(features[0]))
+    features_params = {
+        'pca_dim': 64,
+        'modalities_path': f'{modalities_path}/modalities_dict_{version}.h5',
+        'features_path': features_path,
+    }
+    additional_features = []
+    
+    data_name = 'labels'
+    ensemble_size = '2'
+    num_folds = '10'
 
     if not os.path.exists(f'{modalities_path}/modalities_dict_{version}.h5'):
         get_h5_data(version=version, save_path=modalities_path)
@@ -27,16 +42,22 @@ def main():
                         version=version,
                         save_path=f'{path}/processed')
 
-    data_name = 'labels'
-    ensemble_size = '2'
-    num_folds = '10'
+    if use_additional_features:
+        for feat in features:
+            feature = feat(**features_params)
+            additional_features += [feature]
+            features_df = feature()
+            create_data_features(features_df, str(feature), data_save_path,
+                                    ['labels_training_set_w_drugbank_id', 'labels_infer_drugbank'],
+                                    './data/jsons/similar_drugs_dict_all.json')
+                
 
     # if os.path.exists(f'{checkpoint_path}/evaluation_{data_name}/checkponts'):
     #     shutil.rmtree(f'{checkpoint_path}/evaluation_{data_name}/checkponts')
     
     # eval_arguments = [
     #     '--data_path', f'{data_save_path}/{data_name}_training_set.csv',
-    #     '--features_generator', 'rdkit_2d_normalized',
+    #     # '--features_generator', 'rdkit_2d_normalized',
     #     '--no_features_scaling',
     #     '--dataset_type', 'classification',
     #     '--num_workers', '8',
@@ -53,6 +74,13 @@ def main():
     #     '--config_path', f'./data/DTI/jsons/full_data_hyperparams_w_rkdit.json'
     # ]
 
+    # if use_additional_features:
+    #     eval_arguments += ['--features_path']
+    #     for feature in additional_features:
+    #         eval_arguments += [
+    #             f'{data_save_path}/{data_name}_training_set_w_drugbank_id_{str(feature)}.csv'
+    #         ]
+
     # eval_args = chemprop.args.TrainArgs().parse_args(eval_arguments)
     # mean_score, std_score = chemprop.train.cross_validate(args=eval_args, train_func=chemprop.train.run_training)
 
@@ -62,7 +90,7 @@ def main():
         
     # train_arguments = [
     #     '--data_path', f'{data_save_path}/{data_name}_training_set.csv',
-    #     '--features_generator', 'rdkit_2d_normalized',
+    #     # '--features_generator', 'rdkit_2d_normalized',
     #     '--no_features_scaling',
     #     '--dataset_type', 'classification',
     #     '--num_workers', '8',
@@ -78,28 +106,37 @@ def main():
     #     '--config_path', f'./data/DTI/jsons/full_data_hyperparams_w_rkdit.json'
     # ]
 
+    # if use_additional_features:
+    #     train_arguments += ['--features_path']
+    #     for feature in additional_features:
+    #         train_arguments += [
+    #             f'{data_save_path}/{data_name}_training_set_w_drugbank_id_{str(feature)}.csv'
+    #         ]
+
     # train_args = chemprop.args.TrainArgs().parse_args(train_arguments)
     # mean_score, std_score = chemprop.train.cross_validate(args=train_args, train_func=chemprop.train.run_training)
     # print(mean_score, std_score)
 
-    # predict_arguments = [
-    #     '--test_path', f'{data_save_path}/{data_name}_infer_drugbank.csv',
-    #     '--features_generator', 'rdkit_2d_normalized',
-    #     '--no_features_scaling',
-    #     '--checkpoint_dir', f'{checkpoint_path}/full_data_{data_name}_checkpoints/',
-    #     '--preds_path', f'{path}/predictions/all_data_infer_{data_name}_preds.csv',
-    #     '--smiles_column', 'Smiles',
-    # ]
+    predict_arguments = [
+        '--test_path', f'{data_save_path}/{data_name}_infer_drugbank.csv',
+        # '--features_generator', 'rdkit_2d_normalized',
+        '--no_features_scaling',
+        '--checkpoint_dir', f'{checkpoint_path}/full_data_{data_name}_checkpoints/',
+        '--preds_path', f'{path}/predictions/all_data_infer_{data_name}_preds.csv',
+        '--smiles_column', 'Smiles',
+    ]
 
-    # predict_args = chemprop.args.PredictArgs().parse_args(predict_arguments)
-    # preds = chemprop.train.make_predictions(args=predict_args)
+    if use_additional_features:
+        predict_arguments += ['--features_path']
+        for feature in additional_features:
+            predict_arguments += [
+                f'{data_save_path}/{data_name}_infer_drugbank_{str(feature)}.csv'
+            ]
 
-    # reader = DrugReader()
-    # drug_bank = reader.get_drug_data('./data/DrugBankReleases', '5.1.8')
-
-    # keys = list(drug_bank.id_to_drug.keys())
-    # for key in keys[:10]:
-    #     print(drug_bank.id_to_drug[key].description)
+    predict_args = chemprop.args.PredictArgs().parse_args(predict_arguments)
+    preds = chemprop.train.make_predictions(args=predict_args)
+    
+    print('enriching data')
     preds_path = f'{path}/predictions/all_data_infer_{data_name}_preds.csv'
     df = pd.read_csv(preds_path)
     enriched_df = enrich_data(df, df.columns[0], './data/DrugBankReleases', '5.1.8')

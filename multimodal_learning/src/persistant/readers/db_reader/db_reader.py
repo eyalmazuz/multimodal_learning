@@ -23,7 +23,8 @@ def get_h5_data(version: str, save_path: str) -> None:
                             dense_table_name_list=[tax_table,smiles_table, mol_weight_table],version=version,add_counts_to_sparse=True)
 
 
-    ans_targets = t.get_target_features(version, column='target', value_type= 'mapping')
+    ans_targets = t.get_target_features(version, column='target', value_type= 'binary')
+    print(ans_targets.head())
 
     ans_targets.columns = ['Target: ' + x for x in ans_targets.columns]
     ans = ans.join(ans_targets,how='left')
