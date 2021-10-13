@@ -9,6 +9,7 @@ from src.preprocess.chemprop_preprocessor import preprocess_data, create_data_fe
 from src.utils.utils import read_h5
 from src.utils.description_utils import enrich_data
 from src.features.drug_target.TargetPCAFeature import TargetPCAFeature
+from src.features.drug_target.DDIFeature import DDIFeature
 
 def main():
     version = '5.1.8'
@@ -20,12 +21,22 @@ def main():
     data_save_path = f'{path}/processed'
     
     use_additional_features = True
-    features = [TargetPCAFeature]
+    features = [
+        TargetPCAFeature,
+        # DDIFeature
+        ]
     print(str(features[0]))
     features_params = {
+        # Target PCA params
         'pca_dim': 64,
         'modalities_path': f'{modalities_path}/modalities_dict_{version}.h5',
         'features_path': features_path,
+        
+        # DDI feautre params
+        'emb_dim': 256,
+        'old_version': '5.1.8',
+        'new_version': '5.1.8',
+        'drugbank_path': './data/DrugBankReleases',
     }
     additional_features = []
     
@@ -48,6 +59,7 @@ def main():
             additional_features += [feature]
             features_df = feature()
             create_data_features(features_df, str(feature), data_save_path,
+                                 f'{modalities_path}/modalities_dict_{version}.h5',
                                     ['labels_training_set_w_drugbank_id', 'labels_infer_drugbank'],
                                     './data/jsons/similar_drugs_dict_all.json')
                 
@@ -136,12 +148,21 @@ def main():
     predict_args = chemprop.args.PredictArgs().parse_args(predict_arguments)
     preds = chemprop.train.make_predictions(args=predict_args)
     
+    preds_name = f'all_data_infer_{data_name}_preds'
+    
+    if use_additional_features:
+        new_name = preds_name
+        for i, feature in enumerate(additional_features):
+            new_name += '_' + str(feature)
+        os.rename(f'{path}/predictions/all_data_infer_{data_name}_preds.csv',
+                f'{path}/predictions/{new_name}.csv')
+    
     print('enriching data')
-    preds_path = f'{path}/predictions/all_data_infer_{data_name}_preds.csv'
+    preds_path = f'{path}/predictions/{new_name}.csv'
     df = pd.read_csv(preds_path)
     enriched_df = enrich_data(df, df.columns[0], './data/DrugBankReleases', '5.1.8')
     print(enriched_df.shape)
-    enriched_df.to_csv(f'{path}/predictions/all_data_infer_{data_name}_preds_w_drug_bank_info.csv', index=False)
+    enriched_df.to_csv(f'{path}/predictions/{new_name}_w_drug_bank_info.csv', index=False)
 
 if __name__ == "__main__":
     main()

@@ -10,8 +10,6 @@ from src.persistant.readers.db_reader.get_dense_vectors_features_from_DB import 
 from src.persistant.readers.db_reader.table_names import *
 
 random.seed(30)
-version = "5.1.8"
-
 
 def get_h5_data(version: str, save_path: str) -> None:
 

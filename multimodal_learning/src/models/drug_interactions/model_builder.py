@@ -1,10 +1,10 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-from drug_interactions.datasets.dataset_builder import DatasetTypes
-from drug_interactions.models.AFMP import AFMP, AFMPConfig
-from drug_interactions.models.CharSmiles import CharSmiles, CharSmilesConfig
-from drug_interactions.models.DeepSmiles import DeepSmiles, DeepSmilesConfig
+from src.datasets.drug_interactions.dataset_builder import DatasetTypes
+from src.models.drug_interactions.AFMP import AFMP, AFMPConfig
+from src.models.drug_interactions.CharSmiles import CharSmiles, CharSmilesConfig
+from src.models.drug_interactions.DeepSmiles import DeepSmiles, DeepSmilesConfig
 
 
 def get_config(model_type: DatasetTypes, **kwargs):

@@ -84,8 +84,8 @@ def get_dataset(old_drug_bank: DrugBank,
 
     return (train_dataset,
             validation_dataset,
-            test_new_old_dataset,
-            test_new_new_dataset,
+            # test_new_old_dataset,
+            # test_new_new_dataset,
             # test_all_dataset,
             metadata)
 

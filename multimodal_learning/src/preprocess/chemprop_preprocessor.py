@@ -7,6 +7,9 @@ import pandas as pd
 from pandas import HDFStore
 from tqdm import tqdm
 
+from src.utils.utils import read_h5
+
+
 def create_prediction_splits(df,target_att_name,set_name="set",num_test_sets=10,random_state=None,include_pos=False):
     assert set not in df.columns,'The column for target already exists in the dataframe'
     if not include_pos:
@@ -80,8 +83,18 @@ def preprocess_data(data_path: str, modalities_path: str, save_path: str, versio
 def create_data_features(feature_df: pd.DataFrame,
                          feature_name: str,
                          data_path: str,
+                         modalities_path: str,
                          files: List[str],
-                         similarity_dict_path: str):
+                         similarity_dict_path: str,
+                         remove_unapproved_drugs: bool=True):
+
+    h5 = read_h5(modalities_path)
+    df = h5['/df']
+    h5.close()
+
+    approved_drugs = df[df['Group: approved'] == True].index.tolist()
+    feature_df = feature_df[feature_df.index.isin(approved_drugs)]
+
     print(f'creating feature: {feature_name}')
     for file_ in files:
         feature_save_path = f'{data_path}/{file_}_{feature_name}.csv'

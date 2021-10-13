@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
 
-from drug_interactions.utils.utils import send_message
+from src.utils.utils import send_message
 
 Data = Tuple[np.ndarray, np.ndarray, List[Tuple[int, int]], Dict[int, List[int]]]
 TrainData = Tuple[List[Tuple[int, int]], List[int]]

@@ -18,7 +18,7 @@ class TargetPCAFeature():
 
 
     def __call__(self):
-        if not os.path.exists(f'{self.features_path}/{str(self)}'):
+        if not os.path.exists(f'{self.features_path}/{str(self)}.csv'):
             h5 = read_h5(self.modalities_path)
             df = h5['/df']
             h5.close()
@@ -41,6 +41,6 @@ class TargetPCAFeature():
 
             features_pca.to_csv(f'{self.features_path}/{str(self)}.csv', index=True)
         else:
-            features_pca = pd.read_csv(f'{self.features_path}/{str(self)}.csv')
+            features_pca = pd.read_csv(f'{self.features_path}/{str(self)}.csv', index_col=0)
 
         return features_pca
