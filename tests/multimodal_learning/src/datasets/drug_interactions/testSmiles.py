@@ -2,9 +2,9 @@ from unittest import TestCase
 
 import numpy as np
 
-from drug_interactions.reader.dal import Drug, DrugBank
-from drug_interactions.training.train import Trainer
-from drug_interactions.datasets.OneHotSmilesDataset import OneHotSmilesDrugDataset
+from multimodal_learning.src.persistant.readers.db_reader.db_reader import Drug, DrugBank
+from multimodal_learning.src.training.train import Trainer
+# from multimodal_learning.src.datasets.D import OneHotSmilesDrugDataset
 
 class OneHotSmilesDrugDatasetTestCase(TestCase):
 

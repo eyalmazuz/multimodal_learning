@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from drug_interactions.reader.dal import Drug, DrugBank
+from multimodal_learning.src.persistant.readers.db_reader.db_reader import Drug, DrugBank
 
 class DrugTestCase(TestCase):
 

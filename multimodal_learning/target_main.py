@@ -23,7 +23,7 @@ def main():
     use_additional_features = True
     features = [
         TargetPCAFeature,
-        # DDIFeature
+        DDIFeature
         ]
     print(str(features[0]))
     features_params = {
@@ -64,70 +64,69 @@ def main():
                                     './data/jsons/similar_drugs_dict_all.json')
                 
 
-    # if os.path.exists(f'{checkpoint_path}/evaluation_{data_name}/checkponts'):
-    #     shutil.rmtree(f'{checkpoint_path}/evaluation_{data_name}/checkponts')
+    if os.path.exists(f'{checkpoint_path}/evaluation_{data_name}_checkpoints'):
+        shutil.rmtree(f'{checkpoint_path}/evaluation_{data_name}_checkpoints')
     
-    # eval_arguments = [
-    #     '--data_path', f'{data_save_path}/{data_name}_training_set.csv',
-    #     # '--features_generator', 'rdkit_2d_normalized',
-    #     '--no_features_scaling',
-    #     '--dataset_type', 'classification',
-    #     '--num_workers', '8',
-    #     '--extra_metrics', 'prc-auc',
-    #     '--split_type', 'scaffold_balanced',
-    #     '--split_sizes', '0.7', '0.1', '0.2',
-    #     '--num_folds', f'{num_folds}',
-    #     '--save_dir', f'{checkpoint_path}/evaluation_{data_name}_checkpoints',
-    #     '--smiles_column', 'Smiles',
-    #     '--epochs', '30',
-    #     '--ensemble_size', f'{ensemble_size}',
-    #     '--save_preds',
-    #     '--save_smiles_splits',
-    #     '--config_path', f'./data/DTI/jsons/full_data_hyperparams_w_rkdit.json'
-    # ]
+    eval_arguments = [
+        '--data_path', f'{data_save_path}/{data_name}_training_set.csv',
+        # '--features_generator', 'rdkit_2d_normalized',
+        '--no_features_scaling',
+        '--dataset_type', 'classification',
+        '--num_workers', '8',
+        '--extra_metrics', 'prc-auc',
+        '--split_type', 'scaffold_balanced',
+        '--split_sizes', '0.7', '0.1', '0.2',
+        '--num_folds', f'{num_folds}',
+        '--save_dir', f'{checkpoint_path}/evaluation_{data_name}_checkpoints',
+        '--smiles_column', 'Smiles',
+        '--epochs', '30',
+        '--ensemble_size', f'{ensemble_size}',
+        '--save_preds',
+        '--save_smiles_splits',
+        '--config_path', f'./data/DTI/jsons/full_data_hyperparams_w_rkdit.json'
+    ]
 
-    # if use_additional_features:
-    #     eval_arguments += ['--features_path']
-    #     for feature in additional_features:
-    #         eval_arguments += [
-    #             f'{data_save_path}/{data_name}_training_set_w_drugbank_id_{str(feature)}.csv'
-    #         ]
+    if use_additional_features:
+        eval_arguments += ['--features_path']
+        for feature in additional_features:
+            eval_arguments += [
+                f'{data_save_path}/{data_name}_training_set_w_drugbank_id_{str(feature)}.csv'
+            ]
 
-    # eval_args = chemprop.args.TrainArgs().parse_args(eval_arguments)
-    # mean_score, std_score = chemprop.train.cross_validate(args=eval_args, train_func=chemprop.train.run_training)
+    eval_args = chemprop.args.TrainArgs().parse_args(eval_arguments)
+    mean_score, std_score = chemprop.train.cross_validate(args=eval_args, train_func=chemprop.train.run_training)
 
-    # if os.path.exists(f'{checkpoint_path}/full_data_{data_name}_checkpoints'):
-    #     print('here')
-    #     shutil.rmtree(f'{checkpoint_path}/full_data_{data_name}_checkpoints')
+    if os.path.exists(f'{checkpoint_path}/full_data_{data_name}_checkpoints'):
+        shutil.rmtree(f'{checkpoint_path}/full_data_{data_name}_checkpoints')
         
-    # train_arguments = [
-    #     '--data_path', f'{data_save_path}/{data_name}_training_set.csv',
-    #     # '--features_generator', 'rdkit_2d_normalized',
-    #     '--no_features_scaling',
-    #     '--dataset_type', 'classification',
-    #     '--num_workers', '8',
-    #     '--extra_metrics', 'prc-auc',
-    #     '--split_type', 'scaffold_balanced',
-    #     '--split_sizes', '0.9', '0.1', '0.0',
-    #     '--save_dir', f'{checkpoint_path}/full_data_{data_name}_checkpoints',
-    #     '--smiles_column', 'Smiles',
-    #     '--epochs', '30',
-    #     '--ensemble_size', f'{ensemble_size}',
-    #     '--save_preds',
-    #     '--save_smiles_splits',
-    #     '--config_path', f'./data/DTI/jsons/full_data_hyperparams_w_rkdit.json'
-    # ]
+    train_arguments = [
+        '--data_path', f'{data_save_path}/{data_name}_training_set.csv',
+        # '--features_generator', 'rdkit_2d_normalized',
+        '--no_features_scaling',
+        '--dataset_type', 'classification',
+        '--num_workers', '8',
+        '--extra_metrics', 'prc-auc',
+        '--split_type', 'scaffold_balanced',
+        '--split_sizes', '0.9', '0.1', '0.0',
+        '--save_dir', f'{checkpoint_path}/full_data_{data_name}_checkpoints',
+        '--smiles_column', 'Smiles',
+        '--epochs', '30',
+        '--ensemble_size', f'{ensemble_size}',
+        '--save_preds',
+        '--save_smiles_splits',
+        '--config_path', f'./data/DTI/jsons/full_data_hyperparams_w_rkdit.json'
+    ]
 
-    # if use_additional_features:
-    #     train_arguments += ['--features_path']
-    #     for feature in additional_features:
-    #         train_arguments += [
-    #             f'{data_save_path}/{data_name}_training_set_w_drugbank_id_{str(feature)}.csv'
-    #         ]
+    if use_additional_features:
+        train_arguments += ['--features_path']
+        for feature in additional_features:
+            train_arguments += [
+                f'{data_save_path}/{data_name}_training_set_w_drugbank_id_{str(feature)}.csv'
+            ]
 
-    # train_args = chemprop.args.TrainArgs().parse_args(train_arguments)
-    # mean_score, std_score = chemprop.train.cross_validate(args=train_args, train_func=chemprop.train.run_training)
-    # print(mean_score, std_score)
+    train_args = chemprop.args.TrainArgs().parse_args(train_arguments)
+    mean_score, std_score = chemprop.train.cross_validate(args=train_args, train_func=chemprop.train.run_training)
+    print(mean_score, std_score)
 
     predict_arguments = [
         '--test_path', f'{data_save_path}/{data_name}_infer_drugbank.csv',

@@ -16,6 +16,4 @@ def send_message(text: str):
 def read_h5(path: str='./data/DTI/h5/modalities_dict_5.1.8.h5'):
     # Read data. Created using create_data_files.py
     store = pd.HDFStore(path)
-    print(store.info())
-    print(store.keys())
     return store
