@@ -80,11 +80,11 @@ def main():
 
     similar_drugs = get_similar_drugs(all_drugs)
 
-    save_dict(similar_drugs, path='./data/jsons/similar_drugs_dict_all.json')
+    save_dict(similar_drugs, path='./data/DDI/jsons/similar_drugs_dict_all.json')
 
     similar_drugs = filter_new_drugs(similar_drugs, old_drug_ids)
 
-    save_dict(similar_drugs, path='./data/jsons/similar_drugs_dict_only_old.json')
+    save_dict(similar_drugs, path='./data/DDI/jsons/similar_drugs_dict_only_old.json')
 
 
 if __name__ == "__main__":

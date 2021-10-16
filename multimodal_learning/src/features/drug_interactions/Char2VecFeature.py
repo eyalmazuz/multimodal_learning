@@ -1,3 +1,4 @@
+from math import e
 from typing import Dict
 
 from gensim.models import Word2Vec
@@ -17,7 +18,7 @@ class Char2VecFeature():
     def __repr__(self, ):
         return "Char2VecFeature"
 
-    def __call__(self, old_drug_bank, new_drug_bank) -> Dict[str, np.array]:
+    def __call__(self, old_drug_bank, new_drug_bank=None) -> Dict[str, np.array]:
         train_drug_ids = set(old_drug_bank.id_to_drug.keys())
         test_drug_ids = set(new_drug_bank.id_to_drug.keys())
         new_drug_ids = test_drug_ids - (train_drug_ids & test_drug_ids)
@@ -26,9 +27,10 @@ class Char2VecFeature():
         for drug_id in train_drug_ids:
             drug_to_smiles[drug_id] = old_drug_bank.id_to_drug[drug_id].smiles
 
-        test_drug_to_smiles = {}
-        for drug_id in new_drug_ids:
-            test_drug_to_smiles[drug_id] = new_drug_bank.id_to_drug[drug_id].smiles
+        if new_drug_bank:
+            test_drug_to_smiles = {}
+            for drug_id in new_drug_ids:
+                test_drug_to_smiles[drug_id] = new_drug_bank.id_to_drug[drug_id].smiles
 
     
         texts = [['!'] + list(smiles) + ['E'] for smiles in drug_to_smiles.values()] + ['?']
@@ -40,7 +42,13 @@ class Char2VecFeature():
         print('done training')
         drug_to_smiles_features = {}
         
-        for (drug_id, smiles) in tqdm({**drug_to_smiles, **test_drug_to_smiles}.items(), desc='word vectors'):
+        if new_drug_bank:
+            all_smiles = {**drug_to_smiles, **test_drug_to_smiles}.items()
+
+        else:
+            all_smiles = drug_to_smiles
+
+        for (drug_id, smiles) in tqdm(all_smiles, desc='word vectors'):
             smiles_vector =  np.zeros((embed , self.embedding_size), dtype=np.float32)
             #encode the startchar
             smiles_vector[0, :] = model.wv['!']

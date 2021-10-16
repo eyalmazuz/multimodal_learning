@@ -86,7 +86,7 @@ def main():
                                 validation_size=0.2,
                                 batch_size=1024,
                                 atom_size=300,
-                                data_path='./data/csvs/data',)
+                                data_path='./data/DDI/csvs/',)
 
     metadata['embedding_size'] = 2
     model = get_model(dataset_type, **metadata)
@@ -95,19 +95,19 @@ def main():
 
     trainer.train(model, train_dataset, validation_dataset, epochs=3, dataset_type=dataset_type_str)
 
-    # predict_tta(model, test_new_old_similar_dataset, dataset_type=f'L{dataset_type_str}_2', save_path='./data/csvs/results/All_Data/TTANewOld', save=True)
+    # predict_tta(model, test_new_old_similar_dataset, dataset_type=f'L{dataset_type_str}_2', save_path='./data/DDI/csvs/results/All_Data/TTANewOld', save=True)
 
-    #predict_tta(model, test_new_new_similar_dataset, dataset_type=f'L{dataset_type_str}_2', save_path='./data/csvs/results/All_Data/TTANewNew', save=True)
+    #predict_tta(model, test_new_new_similar_dataset, dataset_type=f'L{dataset_type_str}_2', save_path='./data/DDI/csvs/results/All_Data/TTANewNew', save=True)
     
-    # predict(model, test_new_old_similar_dataset, dataset_type=dataset_type_str, save_path='./data/csvs/results/All_Data/NewOldNLCS', save=True)
+    # predict(model, test_new_old_similar_dataset, dataset_type=dataset_type_str, save_path='./data/DDI/csvs/results/All_Data/NewOldNLCS', save=True)
 
-    # predict(model, test_new_new_similar_dataset, dataset_type=dataset_type_str, save_path='./data/csvs/results/All_Data/NewNewNLCS', save=True)
+    # predict(model, test_new_new_similar_dataset, dataset_type=dataset_type_str, save_path='./data/DDI/csvs/results/All_Data/NewNewNLCS', save=True)
 
-    with open('./data/jsons/drug_emb_order.json', 'w') as f:
+    with open('./data/DDI/jsons/drug_emb_order.json', 'w') as f:
         json.dump(train_dataset.features['EmbeddingFeature'], f)
 
     drug_emb = model.drug_embedding.get_weights()
-    np.save('./data/npys/2d_embs.npy', drug_emb[0])
+    np.save('./data/DDI/npys/2d_embs.npy', drug_emb[0])
 
 if __name__ == "__main__":
     main()

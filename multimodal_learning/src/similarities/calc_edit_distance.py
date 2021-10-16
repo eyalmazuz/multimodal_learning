@@ -18,7 +18,7 @@ def levenshteinDistance(s1, s2):
     return distances[-1]
 
 def main():
-	df = pd.read_csv('./data/csvs/data/test_new_old_similar.csv')
+	df = pd.read_csv('./data/DDI/csvs/data/test_new_old_similar.csv')
 
 	new_drugs = df[["Drug1_ID", "Drug1_SMILES"]].drop_duplicates(subset=["Drug1_ID", "Drug1_SMILES"])
 	old_drugs = df[["Drug2_ID", "Drug2_SMILES"]].drop_duplicates(subset=["Drug2_ID", "Drug2_SMILES"])
@@ -31,7 +31,7 @@ def main():
 			distance = 1 - (distance / max(len(old_drug_smiles), len(new_drug_smiles)))
 			similars[new_drug_id].append((old_drug_id, round(distance, 4)))
 		similars[new_drug_id] = sorted(similars[new_drug_id], key=lambda x: x[1], reverse=True)
-	with open('./data/jsons/edit_distance.json', 'w') as f:
+	with open('./data/DDI/jsons/edit_distance.json', 'w') as f:
 		json.dump(similars, f)
 
 if __name__ == "__main__":

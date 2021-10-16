@@ -35,8 +35,15 @@ def main():
         # DDI feautre params
         'emb_dim': 256,
         'old_version': '5.1.8',
-        'new_version': '5.1.8',
-        'drugbank_path': './data/DrugBankReleases',
+        #'new_version': './data/DrugBankReleases/5.1.8',
+        'drugbank_path': './data/DrugBankReleases/',
+        'sample': True,
+        'epoch_sample': False,
+        'neg_pos_ratio': 1.0,
+        'validation_size': 0.2,
+        'batch_size': 1024,
+        'atom_size': 300,
+        'DDI_data_path': './data/DDI/csvs'
     }
     additional_features = []
     

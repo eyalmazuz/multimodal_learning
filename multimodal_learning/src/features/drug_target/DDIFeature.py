@@ -18,8 +18,8 @@ class DDIFeature():
         self.emb_dim = emb_dim
         self.features_path = features_path
         self.old_version = kwargs['old_version']
-        self.new_version = kwargs['new_version']
         self.drugbank_path = kwargs['drugbank_path']
+        self.kwargs = kwargs
 
     def __repr__(self,):
         return f"DDIFeature_{self.emb_dim}"
@@ -50,14 +50,13 @@ class DDIFeature():
 
         return features_ddi
 
-    def get_emb(self, ):
-        reader = DrugReader(self.drugbank_path)
+    def get_emb(self):
+        reader = DrugReader()
 
-        old_drug_bank, new_drug_bank = reader.get_drug_data(self.old_version, self.new_version)
+        old_drug_bank = reader.get_drug_data(self.drugbank_path, self.old_version)
         preprocessor =  DrugPreprocessor()
 
         old_drug_bank = preprocessor.get_preprocessed_drug_bank(old_drug_bank, f'{self.drugbank_path}/{self.old_version}')
-        new_drug_bank = preprocessor.get_preprocessed_drug_bank(new_drug_bank, f'{self.drugbank_path}/{self.new_version}')
 
 
         dataset_type_str = str(DatasetTypes.AFMP).split(".")[1]
@@ -77,15 +76,9 @@ class DDIFeature():
         features = get_features(DatasetTypes.AFMP, **feature_config)
 
         (train_dataset, validation_dataset, metadata) = get_dataset(old_drug_bank,
-                                                                    new_drug_bank,
+                                                                    new_drug_bank=None,
                                                                     feature_list=features,
-                                                                    sample=True,
-                                                                    epoch_sample=False,
-                                                                    neg_pos_ratio=1.0,
-                                                                    validation_size=0.2,
-                                                                    batch_size=1024,
-                                                                    atom_size=300,
-                                                                    data_path='./data/csvs/data',)
+                                                                    **self.kwargs)
 
         metadata['embedding_size'] = self.emb_dim
         model = get_model(DatasetTypes.AFMP, **metadata)

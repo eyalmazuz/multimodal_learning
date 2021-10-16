@@ -11,7 +11,7 @@ class OneHotFeature():
     def __repr__(self,):
         return "OneHotFeature"
 
-    def __call__(self, old_drug_bank, new_drug_bank) -> Dict[str, np.array]:
+    def __call__(self, old_drug_bank, new_drug_bank=None) -> Dict[str, np.array]:
         print('in onehot call')
         train_drug_ids = set(old_drug_bank.id_to_drug.keys())
         test_drug_ids = set(new_drug_bank.id_to_drug.keys())
@@ -21,17 +21,25 @@ class OneHotFeature():
         for drug_id in train_drug_ids:
             drug_to_smiles[drug_id] = old_drug_bank.id_to_drug[drug_id].smiles
 
-        test_drug_to_smiles = {}
-        for drug_id in new_drug_ids:
-            test_drug_to_smiles[drug_id] = new_drug_bank.id_to_drug[drug_id].smiles
+        if new_drug_bank:
+            test_drug_to_smiles = {}
+            for drug_id in new_drug_ids:
+                test_drug_to_smiles[drug_id] = new_drug_bank.id_to_drug[drug_id].smiles
 
+    
         charset = sorted(set("".join(list(drug_to_smiles.values()))+"!E?"))
         embed = max([len(smile) for smile in {**drug_to_smiles, **test_drug_to_smiles}.values()]) + 2
 
         drug_to_smiles_features = {}
 
         char_to_int = dict((c, i) for i, c in enumerate(charset))
-        for (drug_id, smiles) in tqdm({**drug_to_smiles, **test_drug_to_smiles}.items(), desc='one-hot'):
+        if new_drug_bank:
+            all_smiles = {**drug_to_smiles, **test_drug_to_smiles}.items()
+
+        else:
+            all_smiles = drug_to_smiles
+
+        for (drug_id, smiles) in tqdm(all_smiles, desc='one-hot'):
             one_hot =  np.zeros((embed , len(charset) + 1), dtype=np.float32)
             #encode the startchar
             one_hot[0,char_to_int["!"]] = 1
