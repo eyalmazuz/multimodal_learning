@@ -25,7 +25,6 @@ def main():
         TargetPCAFeature,
         DDIFeature
         ]
-    print(str(features[0]))
     features_params = {
         # Target PCA params
         'pca_dim': 64,

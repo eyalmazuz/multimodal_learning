@@ -10,8 +10,11 @@ class AFMPConfig():
 
         super().__init__()
         old_drug_bank = kwargs['old_drug_bank']
-        new_drug_bank = kwargs['new_drug_bank']
-        self.num_drugs = len(set(old_drug_bank.id_to_drug.keys()) | set(new_drug_bank.id_to_drug.keys()))
+        if 'new_drug_bank' in kwargs:
+            new_drug_bank = kwargs['new_drug_bank']
+            self.num_drugs = len(set(old_drug_bank.id_to_drug.keys()) | set(new_drug_bank.id_to_drug.keys()))
+        else:
+            self.num_drugs = len(set(old_drug_bank.id_to_drug.keys()))
         self.embedding_size = embedding_size
         self.dropout_rate = dropout_rate
         self.propegation_factor = propegation_factor

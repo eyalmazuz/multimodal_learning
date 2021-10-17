@@ -105,7 +105,6 @@ def create_data_features(feature_df: pd.DataFrame,
             with open(similarity_dict_path, 'r') as f:
                 similarity_dict = json.load(f)
             
-            # TODO remove un approved drugs from feature_df
             extra_df = pd.DataFrame()
             for drug_id in tqdm(df.index):
                 found_feature = False
