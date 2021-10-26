@@ -89,6 +89,22 @@ def enrich_data(data, drugBank_col_name, drug_bank_path, version):
     
     return output
 
+
+def enrich_predicitons(preds_save_path, feature_names):
+
+    last_dot_idx = preds_save_path.rfind('.')
+    new_name = preds_save_path[:last_dot_idx]
+
+    new_name += feature_names
+    os.rename(preds_save_path, new_name + '.csv')
+    
+    print('enriching data')
+    df = pd.read_csv(new_name + '.csv')
+    enriched_df = enrich_data(df, df.columns[0], './data/DrugBankReleases', '5.1.8')
+    print(enriched_df.shape)
+
+    enriched_df.to_csv(new_name + "w_drugbank_info" + '.csv', index=False)
+
 if __name__ == "__main__":
     disease = 'cancer_clinical_trials'
     path = os.path.join('output','targets',disease,'predictions')

@@ -7,6 +7,7 @@ import pandas as pd
 from pandas import HDFStore
 from tqdm import tqdm
 
+from src.persistant.readers.db_reader.db_reader import get_h5_data
 from src.utils.utils import read_h5
 
 
@@ -34,22 +35,15 @@ def create_prediction_splits(df,target_att_name,set_name="set",num_test_sets=10,
 
 def preprocess_data(data_path: str, modalities_path: str, save_path: str, version: str) -> None:
 
-    # main_target = 'cancer_clinical_trials'#cancer_clinical_trials
-    # file = 'labels'
-
     main_outcome = pd.read_csv(f'{data_path}/labels.csv', index_col=0)
-    # main_outcome = pd.read_csv(os.path.join('output','targets',main_target,'raw',file+'.csv'),index_col=0)
 
     if len(main_outcome.columns)>1:
         print('only one target attt is supported!!!!! Removing cols at end')
         main_outcome = main_outcome[[main_outcome.columns[0]]]
 
-
     main_outcome = main_outcome[~main_outcome.index.duplicated(keep='first')]
     print('removing',main_outcome.iloc[:,0].isna().sum(),'drugs with unknown class')
     main_outcome = main_outcome[~main_outcome.iloc[:,0].isna()]
-
-
 
     store = HDFStore(os.path.join(modalities_path, f'modalities_dict_{version}.h5'))
     print(store.info())
@@ -76,14 +70,12 @@ def preprocess_data(data_path: str, modalities_path: str, save_path: str, versio
         current_set_df = current_feature_df[current_feature_df.set == current_infer_set]
         current_set_df.drop('set',axis=1).to_csv(os.path.join(save_path, str(current_infer_set) + '_infer_labels.csv'))
 
-
     smiles.loc[~smiles.index.isin(ans.index)].drop_duplicates(subset='Smiles').to_csv(os.path.join(save_path, 'labels_infer_drugbank'+'.csv'),index=True)
 
 
 def create_data_features(feature_df: pd.DataFrame,
                          feature_name: str,
-                         data_path: str,
-                         modalities_path: str,
+                        modalities_path: str,
                          files: List[str],
                          similarity_dict_path: str,
                          remove_unapproved_drugs: bool=True):
@@ -92,16 +84,17 @@ def create_data_features(feature_df: pd.DataFrame,
     df = h5['/df']
     h5.close()
 
-    approved_drugs = df[df['Group: approved'] == True].index.tolist()
-    feature_df = feature_df[feature_df.index.isin(approved_drugs)]
+    if remove_unapproved_drugs:
+        approved_drugs = df[df['Group: approved'] == True].index.tolist()
+        feature_df = feature_df[feature_df.index.isin(approved_drugs)]
 
     print(f'creating feature: {feature_name}')
     for file_ in files:
-        feature_save_path = f'{data_path}/{file_}_{feature_name}.csv'
+        last_dot_idx = file_.rfind('.')
+        file_path = file_[:last_dot_idx]
+        feature_save_path = f'{file_path}_{feature_name}.csv'
         if not os.path.exists(feature_save_path):
-            path = os.path.join(data_path, f'{file_}.csv')
-            df = pd.read_csv(path, index_col=0)
-            # features_df = pd.read_csv(feature_path)
+            df = pd.read_csv(file_, index_col=0)
             with open(similarity_dict_path, 'r') as f:
                 similarity_dict = json.load(f)
             
@@ -121,16 +114,64 @@ def create_data_features(feature_df: pd.DataFrame,
                                 drug_feature.name = drug_id
                                 extra_df = extra_df.append(drug_feature)
                                 found_feature = True
-                                # print(f'found similar drug to {drug_id}: {similar_drug}')
                                 break
 
                 if not found_feature:
-                    # print(f'No feature for {drug_id} and no similars in features')
                     mean_feature = feature_df.mean(axis=0)
                     mean_feature.name = drug_id
                     extra_df = extra_df.append(mean_feature)
             
             extra_df.to_csv(feature_save_path, index=False)
 
-        
 
+def prepare_cancer_data(version: str='5.1.8',
+                        modalities_path: str='./data/DTI/h5',
+                        path: str='./data/DTI/cancer_clinical_trials',):
+
+    if not os.path.exists(f'{modalities_path}/modalities_dict_{version}.h5'):
+        get_h5_data(version=version, save_path=modalities_path)
+
+    if not os.path.exists(f'{path}/processed/'):
+        preprocess_data(data_path=f'{path}/raw',
+                        modalities_path='./data/DTI/h5/',
+                        version=version,
+                        save_path=f'{path}/processed')
+
+
+def prepare_chembl_data(df: pd.DataFrame, save_path: str):
+
+
+
+    df = df[(df['standard_relation'] == "=") &
+             (df['potential_duplicate'] == False) &
+             (df['target_organism'] == 'Homo sapiens') &
+             (df['standard_type'] == 'IC50')
+    ]
+
+    df = df[~df['pchembl_value'].isna()]
+
+    df = df[[
+        'compound_chembl_id',
+        'canonical_smiles',
+        'pchembl_value',
+        'target_name',
+        'target_chembl_id',
+    ]]
+
+    target_names = df['target_name'].unique().tolist()
+
+    target_df = pd.DataFrame(columns=['Smiles'] + target_names)
+
+    grouped_df = df.groupby('compound_chembl_id')
+    for id, group in grouped_df:
+        group = group.drop_duplicates(['compound_chembl_id', 'target_chembl_id'])
+        series = {}
+        data = group[['canonical_smiles', 'target_name', 'pchembl_value']].T.to_dict()
+        for value in data.values():
+            series[value['target_name']] = value['pchembl_value']
+            series['Smiles'] = value['canonical_smiles']
+        
+        series = pd.Series(series)
+        target_df = target_df.append(series, ignore_index=True)
+
+    target_df.to_csv(save_path, index=False)

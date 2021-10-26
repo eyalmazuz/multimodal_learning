@@ -1,7 +1,10 @@
 import os
 import pickle
-import random
 from pathlib import Path
+import random
+import sqlite3
+from typing import List
+
 
 import pandas as pd
 
@@ -54,6 +57,48 @@ def get_h5_data(version: str, save_path: str) -> None:
     store['df'] = ans
     store['modalities'] = ans_modalities
     store.close()
+
+def get_chembl_data(db_path: str, target_ids: List[str], standard_types: List[str]):
+    conn = sqlite3.connect(db_path)
+
+    target_ids = [f"'{target}'" for target in target_ids]
+    standard_types = [f"'{type}'" for type in standard_types]
+
+
+    query = f"""
+    SELECT m.chembl_id AS compound_chembl_id,
+    s.canonical_smiles,
+    act.standard_type,
+    act.standard_relation,
+    act.standard_value,
+    act.pchembl_value,
+    act.potential_duplicate,
+    t.chembl_id                    AS target_chembl_id,
+    t.pref_name                    AS target_name,
+    t.organism                     AS target_organism
+    FROM compound_structures s
+    JOIN molecule_dictionary m ON s.molregno = m.molregno
+    JOIN compound_records r ON m.molregno = r.molregno
+    JOIN docs d ON r.doc_id = d.doc_id
+    JOIN activities act ON r.record_id = act.record_id
+    JOIN assays a ON act.assay_id = a.assay_id
+    JOIN target_dictionary t ON a.tid = t.tid
+        AND t.chembl_id IN ({','.join(target_ids)})
+        AND m.chembl_id IN
+            (SELECT DISTINCT
+                m1.chembl_id
+            FROM molecule_dictionary m1
+                JOIN molecule_hierarchy mh ON mh.molregno = m1.molregno
+                JOIN molecule_dictionary m2 ON mh.parent_molregno = m2.molregno)
+        AND act.standard_type IN ({','.join(standard_types)})
+        AND act.standard_units = 'nM';
+    """
+
+    df = pd.read_sql(query, conn)
+    conn.close()
+    df.to_csv('./foo.csv', index=False)
+
+    return df
 
 if __name__ == "__main__":
     get_h5_data('5.1.8', './data/h5/')
