@@ -145,7 +145,8 @@ def prepare_chembl_data(df: pd.DataFrame, save_path: str):
     df = df[(df['standard_relation'] == "=") &
              (df['potential_duplicate'] == False) &
              (df['target_organism'] == 'Homo sapiens') &
-             (df['standard_type'] == 'IC50')
+             (df['standard_type'] == 'IC50') &
+             (df['bao_label'] == 'cell-based format')
     ]
 
     df = df[~df['pchembl_value'].isna()]

@@ -29,5 +29,21 @@ def get_task_config(task):
             '--split_type', 'random',
         ]
 
+    elif task == 'yeast':
+        eval_arguments = [
+            '--no_features_scaling',
+            '--dataset_type', 'classification',
+            '--extra_metrics', 'prc-auc',
+            '--split_type', 'scaffold_balanced',
+        ]
+
+        train_arguments = [
+            '--no_features_scaling',
+            '--dataset_type', 'classification',
+            '--extra_metrics', 'prc-auc',
+            '--split_type', 'scaffold_balanced',
+        ]
+
+
 
     return eval_arguments, train_arguments

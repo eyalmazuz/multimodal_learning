@@ -162,6 +162,12 @@ class DrugDAL():
                     drug_info['weight'] = weight
 
 
+            for external_identifiers in drug.iter("{ns}external-identifiers".format(ns=ns)):#Always only 1
+                for external_identifier in external_identifiers.iter("{ns}external-identifier".format(ns=ns)):
+                    for r in external_identifier.iter("{ns}resource".format(ns=ns)):
+                        if r.text =='ChEMBL':
+                            drug_info['chembl_id'] =  external_identifier.findall("{ns}identifier".format(ns=ns))[0].text
+                            break
 
 
             drug_info['atc'] = set()
@@ -226,6 +232,7 @@ class Drug():
     superclass: Optional[str] = None
     tax_class: Optional[str] = None
     subclass: Optional[str] = None
+    chembl_id: Optional[str] = None
 
     weight: Optional[float] = None
 

@@ -58,12 +58,8 @@ def get_h5_data(version: str, save_path: str) -> None:
     store['modalities'] = ans_modalities
     store.close()
 
-def get_chembl_data(db_path: str, target_ids: List[str], standard_types: List[str]):
+def get_chembl_data(db_path: str, target_ids: List[str]=None, standard_types: List[str]=None):
     conn = sqlite3.connect(db_path)
-
-    target_ids = [f"'{target}'" for target in target_ids]
-    standard_types = [f"'{type}'" for type in standard_types]
-
 
     query = f"""
     SELECT m.chembl_id AS compound_chembl_id,
@@ -75,7 +71,8 @@ def get_chembl_data(db_path: str, target_ids: List[str], standard_types: List[st
     act.potential_duplicate,
     t.chembl_id                    AS target_chembl_id,
     t.pref_name                    AS target_name,
-    t.organism                     AS target_organism
+    t.organism                     AS target_organism,
+    bo.label as bao_label
     FROM compound_structures s
     JOIN molecule_dictionary m ON s.molregno = m.molregno
     JOIN compound_records r ON m.molregno = r.molregno
@@ -83,7 +80,16 @@ def get_chembl_data(db_path: str, target_ids: List[str], standard_types: List[st
     JOIN activities act ON r.record_id = act.record_id
     JOIN assays a ON act.assay_id = a.assay_id
     JOIN target_dictionary t ON a.tid = t.tid
-        AND t.chembl_id IN ({','.join(target_ids)})
+    JOIN bioassay_ontology bo ON a.bao_format = bo.bao_id
+    """
+    if target_ids:
+        target_ids = [f"'{target}'" for target in target_ids]
+        query += "AND t.chembl_id IN ({','.join(target_ids)})"
+
+    if standard_types:
+        standard_types = [f"'{type}'" for type in standard_types]
+
+    query += f"""
         AND m.chembl_id IN
             (SELECT DISTINCT
                 m1.chembl_id
@@ -91,7 +97,11 @@ def get_chembl_data(db_path: str, target_ids: List[str], standard_types: List[st
                 JOIN molecule_hierarchy mh ON mh.molregno = m1.molregno
                 JOIN molecule_dictionary m2 ON mh.parent_molregno = m2.molregno)
         AND act.standard_type IN ({','.join(standard_types)})
-        AND act.standard_units = 'nM';
+        AND act.standard_type IN ('IC50')
+        AND act.standard_units = 'nM'
+        AND act.potential_duplicate = 0
+        AND t.organism = 'Homo sapiens'
+        AND act.standard_relation = '=';
     """
 
     df = pd.read_sql(query, conn)
